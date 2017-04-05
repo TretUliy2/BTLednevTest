@@ -1,6 +1,5 @@
 package hfad.com.btlednevtest;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -15,6 +14,7 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -35,9 +35,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class BTLednevTest extends Activity {
+public class BTLednevTest extends AppCompatActivity {
     private static final String BT_SOCKET = "BlueToothSocket";
-    private ActionBar mActionBar;
+    private android.support.v7.app.ActionBar mActionBar;
     private final int REQUEST_ENABLE_BT = 1001;
     private final String TAG = "DevicesFragment";
     private static final int REQUEST_COARSE_LOCATION = 1121;
@@ -79,6 +79,7 @@ public class BTLednevTest extends Activity {
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         freqTextLabel = (TextView) findViewById(R.id.freq_value);
         dutyTextLabel = (TextView) findViewById(R.id.duty_value);
+        mActionBar = getSupportActionBar();
 
         final String freqBaseText = freqTextLabel.getText().toString();
         final String dutyBaseText = dutyTextLabel.getText().toString();
@@ -87,11 +88,11 @@ public class BTLednevTest extends Activity {
         dutyTextLabel.setText("" + minDuty);
 
 
-        final LinearLayoutManager lManager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
-        final LinearLayoutManager dutylManager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
+        final LinearLayoutManager freqLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
+        final LinearLayoutManager dutyLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mActivity,
-            dutylManager.getOrientation());
+            dutyLmanager.getOrientation());
 
         send = (Button) findViewById(R.id.bt_send);
         if (send != null) {
@@ -103,7 +104,7 @@ public class BTLednevTest extends Activity {
             });
         }
         freqRecycler = (RecyclerView) findViewById(R.id.frequency_recycler);
-        freqRecycler.setLayoutManager(lManager);
+        freqRecycler.setLayoutManager(freqLmanager);
         freqRecycler.addItemDecoration(dividerItemDecoration);
         final String[] frequencys = new String[MAX_FREQ];
         for (int i = 0; i < MAX_FREQ; i++) {
@@ -126,8 +127,8 @@ public class BTLednevTest extends Activity {
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 int first, last, middle;
-                first = lManager.findFirstVisibleItemPosition();
-                last = lManager.findLastVisibleItemPosition();
+                first = freqLmanager.findFirstVisibleItemPosition();
+                last = freqLmanager.findLastVisibleItemPosition();
                 middle = first + (last - first) / 2;
                 Log.d(TAG, "new satate = " + newState + " adapterPosition = " + frequencys[middle]);
                 RecyclerView.ViewHolder holder = recyclerView.findViewHolderForLayoutPosition(middle);
@@ -140,14 +141,14 @@ public class BTLednevTest extends Activity {
         dutyRecycler = (RecyclerView) this.findViewById(R.id.duty_recycler);
 
         dutyRecycler.addItemDecoration(dividerItemDecoration);
-        dutyRecycler.setLayoutManager(dutylManager);
+        dutyRecycler.setLayoutManager(dutyLmanager);
         dutyRecycler.setAdapter(dutyAdapter);
         dutyRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                int first = dutylManager.findFirstVisibleItemPosition();
-                int last = dutylManager.findLastVisibleItemPosition();
+                int first = dutyLmanager.findFirstVisibleItemPosition();
+                int last = dutyLmanager.findLastVisibleItemPosition();
                 int middle = first + (last - first) / 2;
                 Log.d(TAG, "new satate = " + newState + " adapterPosition = " + duties[middle]);
                 RecyclerView.ViewHolder holder = recyclerView.findViewHolderForLayoutPosition(middle);
@@ -519,6 +520,4 @@ public class BTLednevTest extends Activity {
             }
         }
     };
-
-
 }
