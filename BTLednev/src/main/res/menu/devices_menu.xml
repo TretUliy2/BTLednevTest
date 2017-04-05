@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/bt_menu_paired_devices"
+        android:icon="@drawable/ic_bluetooth_searching_black_24dp"
+        android:title="@string/paired_devices"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/bt_menu_disconnect"
+        android:title="@string/bt_menu_disconnect"/>
+    <item
+        android:id="@+id/bt_menu_send_zero"
+        android:icon="@drawable/ic_exposure_zero_black_24dp"
+        android:title="@string/send_null" />
+</menu>

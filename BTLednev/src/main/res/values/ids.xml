@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="bt_menu_paired_devices" type="id">Paired Devices</item>
+    <item name="bt_menu_send_zero" type="id">Menu Send</item>
+    <item name="bt_menu_disconnect" type="id">Disconnect</item>
+</resources>
