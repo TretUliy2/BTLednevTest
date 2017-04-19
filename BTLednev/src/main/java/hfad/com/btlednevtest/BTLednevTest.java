@@ -1,6 +1,6 @@
 package hfad.com.btlednevtest;
 
-import android.app.Activity;
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -11,9 +11,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,7 +46,6 @@ public class BTLednevTest extends AppCompatActivity {
     private android.support.v7.app.ActionBar mActionBar;
     private final int REQUEST_ENABLE_BT = 1001;
     private final String TAG = "DevicesFragment";
-    private static final int REQUEST_COARSE_LOCATION = 1121;
     private ArrayList<String> mScannedDevices = new ArrayList<>();
     private BluetoothAdapter mBtAdapter = null;
     private BluetoothSocket btSocket = null;
@@ -49,6 +54,7 @@ public class BTLednevTest extends AppCompatActivity {
     private SeekBar dutyBar;
     private ProgressDialog btScanProgressDialog;
     private boolean btDiscoverable = false;
+    private boolean phoneDevice;
     private String mArduinoAddress = "20:16:11:23:92:96";
     private boolean usePaired = true;
     private AlertDialog deviceListDialog;
@@ -56,7 +62,7 @@ public class BTLednevTest extends AppCompatActivity {
     RecyclerView freqRecycler;
     RecyclerView dutyRecycler;
     SeekBarsAdapter mAdapter;
-    Activity mActivity;
+    AppCompatActivity mActivity;
     Button send;
     // UUID service - This is the type of Bluetooth device that the BT module is
     // It is very likely yours will be the same, if not google UUID for your manufacturer
@@ -71,6 +77,11 @@ public class BTLednevTest extends AppCompatActivity {
     private final int MAX_FREQ = 130;
     private final int MAX_IMPULSE_TIME = 130;
 
+    public static final int WRITE_PERMISSIONS_REQUEST = 1002;
+    public static final int INSTALL_PACKAGES_REQUEST = 1003;
+    public static final int REQUEST_COARSE_LOCATION = 1004;
+    private boolean hasWritePermission = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +91,8 @@ public class BTLednevTest extends AppCompatActivity {
         freqTextLabel = (TextView) findViewById(R.id.freq_value);
         dutyTextLabel = (TextView) findViewById(R.id.duty_value);
         mActionBar = getSupportActionBar();
+
+        checkPermissions();
 
         final String freqBaseText = freqTextLabel.getText().toString();
         final String dutyBaseText = dutyTextLabel.getText().toString();
@@ -113,11 +126,12 @@ public class BTLednevTest extends AppCompatActivity {
         }
         final String[] duties = new String[MAX_IMPULSE_TIME];
         // Fillers to recycler View
-        for (int i = 0; i < 3; i++) {
+        final int FILLERS_COUNT = 2;
+        for (int i = 0; i < FILLERS_COUNT; i++) {
             duties[i] = "" + 0;
         }
-        for (int i = 3; i < MAX_IMPULSE_TIME; i++) {
-            int duty = i-3 + MIN_IMPULES_TIME;
+        for (int i = FILLERS_COUNT; i < MAX_IMPULSE_TIME; i++) {
+            int duty = i - FILLERS_COUNT + MIN_IMPULES_TIME;
             duties[i] = "" + duty;
         }
         mAdapter = new SeekBarsAdapter(frequencys);
@@ -171,7 +185,83 @@ public class BTLednevTest extends AppCompatActivity {
             IntentFilter filter_new = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
             registerReceiver(mBtPairingRequestReceiver, filter_new);
         }
+
+        // Registering broadcast receivers for all actions
+
+        IntentFilter filterDeviceFound = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        mActivity.registerReceiver(mReceiver, filterDeviceFound);
+
+        int screenSize = getResources().getConfiguration().screenLayout &
+            Configuration.SCREENLAYOUT_SIZE_MASK;
+        phoneDevice = !(screenSize == Configuration.SCREENLAYOUT_SIZE_LARGE || screenSize == Configuration.SCREENLAYOUT_SIZE_XLARGE);
+
+        if (phoneDevice) setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+    }
+
+    private void checkPermissions() {
+        if (ContextCompat.checkSelfPermission(mActivity,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(mActivity,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(mActivity,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    WRITE_PERMISSIONS_REQUEST);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+
+            // Request missing permissions
+            ActivityCompat.requestPermissions(mActivity,
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case WRITE_PERMISSIONS_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    hasWritePermission = true;
+                }
+
+            case INSTALL_PACKAGES_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "INSTALL PERMISSION GRANTED");
+                }
+
+            case REQUEST_COARSE_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Received prmission for bluetooth");
+                }
+        }
+    }
+
+
 
     private final BroadcastReceiver mBtPairingRequestReceiver = new BroadcastReceiver() {
         @Override
@@ -273,6 +363,8 @@ public class BTLednevTest extends AppCompatActivity {
     private void showPairedDialog() {
         deviceListDialog.show();
     }
+
+
 
     private AlertDialog getDeviceDialog() {
         final String[] listDevices;
@@ -441,6 +533,8 @@ public class BTLednevTest extends AppCompatActivity {
             }
         }
     }
+
+
 
     private void deviceDisconnectedShow() {
         LinearLayout noDevicesContainer = (LinearLayout) mActivity.findViewById(R.id.no_device_container);
