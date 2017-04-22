@@ -44,7 +44,7 @@ import java.util.UUID;
 public class BTLednevTest extends AppCompatActivity {
     private static final String BT_SOCKET = "BlueToothSocket";
     private android.support.v7.app.ActionBar mActionBar;
-    private final int REQUEST_ENABLE_BT = 1001;
+
     private final String TAG = "DevicesFragment";
     private ArrayList<String> mScannedDevices = new ArrayList<>();
     private BluetoothAdapter mBtAdapter = null;
@@ -77,9 +77,12 @@ public class BTLednevTest extends AppCompatActivity {
     private final int MAX_FREQ = 130;
     private final int MAX_IMPULSE_TIME = 130;
 
+    private final int REQUEST_ENABLE_BT = 1001;
     public static final int WRITE_PERMISSIONS_REQUEST = 1002;
     public static final int INSTALL_PACKAGES_REQUEST = 1003;
     public static final int REQUEST_COARSE_LOCATION = 1004;
+    private final int REQUEST_BLUETOOTH_PRIVILEGED = 1005;
+
     private boolean hasWritePermission = false;
 
     @Override
@@ -239,6 +242,18 @@ public class BTLednevTest extends AppCompatActivity {
                 new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_COARSE_LOCATION);
 
         }
+
+        if  (Build.VERSION.SDK_INT >= 19) {
+
+            if (ContextCompat.checkSelfPermission(mActivity, Manifest.permission.BLUETOOTH_PRIVILEGED)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                // Request missing permissions
+                ActivityCompat.requestPermissions(mActivity,
+                    new String[]{Manifest.permission.BLUETOOTH_PRIVILEGED}, REQUEST_BLUETOOTH_PRIVILEGED);
+
+            }
+        }
     }
 
     @Override
@@ -257,6 +272,11 @@ public class BTLednevTest extends AppCompatActivity {
             case REQUEST_COARSE_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "Received prmission for bluetooth");
+                }
+
+            case REQUEST_BLUETOOTH_PRIVILEGED:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Received permission for REQUEST_BLUETOOTH_PRIVILEGED");
                 }
         }
     }
