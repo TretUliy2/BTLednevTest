@@ -11,12 +11,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -43,6 +45,9 @@ import java.util.UUID;
 
 public class BTLednevTest extends AppCompatActivity {
     private static final String BT_SOCKET = "BlueToothSocket";
+    private static final String FREQ_SHARED_PREF = "freqSharedPref";
+    private static final String DUTY_SHARED_PREF = "dutySharedPref";
+    private static final String APP_PREFS_NAME = "AppPreferences";
     private android.support.v7.app.ActionBar mActionBar;
 
     private final String TAG = "DevicesFragment";
@@ -76,12 +81,19 @@ public class BTLednevTest extends AppCompatActivity {
     private final int MIN_IMPULES_TIME = 1;
     private final int MAX_FREQ = 130;
     private final int MAX_IMPULSE_TIME = 130;
+    private SharedPreferences mSettings;
 
     private final int REQUEST_ENABLE_BT = 1001;
     public static final int WRITE_PERMISSIONS_REQUEST = 1002;
     public static final int INSTALL_PACKAGES_REQUEST = 1003;
     public static final int REQUEST_COARSE_LOCATION = 1004;
     private final int REQUEST_BLUETOOTH_PRIVILEGED = 1005;
+    LinearLayoutManager freqLmanager;
+    LinearLayoutManager dutyLmanager;
+    Parcelable freqState;
+    Parcelable dutyState;
+    private String FREQ_STATE = "freqState";
+    private String DUTY_STATE = "dutyState";
 
     private boolean hasWritePermission = false;
 
@@ -97,15 +109,14 @@ public class BTLednevTest extends AppCompatActivity {
 
         checkPermissions();
 
-        final String freqBaseText = freqTextLabel.getText().toString();
-        final String dutyBaseText = dutyTextLabel.getText().toString();
+        mSettings = getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE);
 
-        freqTextLabel.setText("" + minFreq);
-        dutyTextLabel.setText("" + minDuty);
+        freqTextLabel.setText("" + mSettings.getInt(FREQ_SHARED_PREF, minFreq));
+        dutyTextLabel.setText("" + mSettings.getInt(DUTY_SHARED_PREF, minDuty));
 
 
-        final LinearLayoutManager freqLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
-        final LinearLayoutManager dutyLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
+        freqLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
+        dutyLmanager = new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false);
 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mActivity,
             dutyLmanager.getOrientation());
@@ -204,7 +215,10 @@ public class BTLednevTest extends AppCompatActivity {
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
+        freqState = savedInstanceState.getParcelable(FREQ_STATE);
+        dutyState = savedInstanceState.getParcelable(DUTY_STATE);
+        freqLmanager.onRestoreInstanceState(freqState);
+        dutyLmanager.onRestoreInstanceState(dutyState);
     }
 
     private void checkPermissions() {
@@ -384,7 +398,14 @@ public class BTLednevTest extends AppCompatActivity {
         deviceListDialog.show();
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putInt(FREQ_SHARED_PREF, Integer.valueOf(freqTextLabel.getText().toString()));
+        editor.putInt(DUTY_SHARED_PREF, Integer.valueOf(dutyTextLabel.getText().toString()));
+        editor.apply();
+    }
 
     private AlertDialog getDeviceDialog() {
         final String[] listDevices;
