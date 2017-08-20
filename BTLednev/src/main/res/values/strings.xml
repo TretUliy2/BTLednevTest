@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">BTLednevTest</string>
     <string name="no_devices">Устройств Не обнаружено</string>
-    <string name="frequency_label">Частота, Гц</string>
-    <string name="duty_label">Длительность импульса</string>
+    <string name="frequency_label">f</string>
+    <string name="duty_label">t</string>
     <string name="send_null">Заткнуть</string>
     <string name="send">Старт</string>
     <string name="device">Device</string>
@@ -10,4 +10,7 @@
     <string name="scanned_devices">Scanned Devices</string>
     <string name="paired_devices">Paired devices</string>
     <string name="bt_menu_disconnect">Отключить</string>
+    <string name="voltage_text_view">V</string>
+    <string name="plus">+</string>
+    <string name="minus">-</string>
 </resources>
